@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-import { createHmac } from "crypto";
-import { v4 as uuidv4 } from "uuid";
+const crypto = require("crypto");
+const { v4: uuidv4 } = require("uuid");
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
     encrypt_password: {
       type: String,
@@ -26,6 +27,7 @@ const userSchema = new mongoose.Schema(
     salt: String,
     role: {
       type: Number,
+      default: 0,
     },
     purchase: {
       type: Array,
@@ -37,7 +39,7 @@ const userSchema = new mongoose.Schema(
 
 userSchema
   .virtual("password")
-  .set(function () {
+  .set(function (password) {
     this._password = password;
     this.salt = uuidv4();
     this.encrypt_password = this.securePassword(password);
@@ -46,14 +48,17 @@ userSchema
     return this._password;
   });
 
-userSchema.method = {
-  authenticate: function (password) {
-    return this.securePassword(password) === this.encrypt_password;
+userSchema.methods = {
+  authenticate: function (plainPassword) {
+    return this.securePassword(plainPassword) === this.encrypt_password;
   },
-  securePassword: function (password) {
-    if (!password) return "";
+  securePassword: function (plainPassword) {
+    if (!plainPassword) return "";
     try {
-      return createHmac("sha256", this.salt).update(password).digest("Hex");
+      return crypto
+        .createHmac("sha256", this.salt)
+        .update(plainPassword)
+        .digest("Hex");
     } catch (err) {
       return "";
     }
