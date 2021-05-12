@@ -27,7 +27,7 @@ router.post(
   createOrder
 );
 // listAllOrder
-routes.get(
+router.get(
   "order/all/:userId",
   isSigned,
   isAuthenticated,
