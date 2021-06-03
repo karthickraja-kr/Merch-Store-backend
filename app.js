@@ -27,7 +27,8 @@ mongoose
   })
   .then(() => {
     console.log("DB CONNECTED");
-  });
+  })
+  .catch((err) => console.log(err));
 
 // MiddleWare
 app.use(bodyParser.json());
